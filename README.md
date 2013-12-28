@@ -9,7 +9,7 @@ Best way to see how to use them is going through the unit tests.
 I've tried to test each utlity function in its own test file.
 
 ```
-[fun-utils "0.1.0"]
+[fun-utils "0.2.0"]
 ```
 
 ## fixdelay

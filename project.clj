@@ -1,4 +1,4 @@
-(defproject fun-utils "0.1.0"
+(defproject fun-utils "0.2.0"
   :description "Clojure utility functions that come up time and again while developing clojure software"
   :url "https://github.com/gerritjvv/fun-utils"
   :license {:name "ECLIPSE PUBLIC LICENSE"
