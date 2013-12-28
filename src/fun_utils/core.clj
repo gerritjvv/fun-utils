@@ -94,3 +94,24 @@
   (if (empty? v2)
     v1
     (-> (apply conj v1 v2) set vec)))
+
+(defn buffered-chan 
+  "Reads from ch-source and if either timeout or the buffer-count has been
+   read the result it sent to the channel thats returned from this function"
+  ([ch-source buffer-count timeout-ms]
+    (buffered-chan ch-source buffer-count timeout-ms 1))
+  ([ch-source buffer-count timeout-ms buffer-or-n]
+    (let [ch-target (chan buffer-count)]
+      (go
+        (loop [buff [] t (timeout timeout-ms)]
+          (let [[v _] (alts! [ch-source t])
+                b (if v (conj buff v) buff)]
+            (if (or (>= (count b) buffer-count) (not v))
+              (do
+                (if (>= (count b) 0)
+                  (>! ch-target b)) ;send the buffer to the channel
+                (recur [] (timeout timeout-ms))) ;create a new buffer and new timeout
+              (recur b t))))) ;pass the new buffer and the current timeout
+            ch-target)))
+  
+  
