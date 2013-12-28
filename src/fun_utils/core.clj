@@ -101,7 +101,7 @@
   ([ch-source buffer-count timeout-ms]
     (buffered-chan ch-source buffer-count timeout-ms 1))
   ([ch-source buffer-count timeout-ms buffer-or-n]
-    (let [ch-target (chan buffer-count)]
+    (let [ch-target (chan buffer-or-n)]
       (go
         (loop [buff [] t (timeout timeout-ms)]
           (let [[v _] (alts! [ch-source t])
