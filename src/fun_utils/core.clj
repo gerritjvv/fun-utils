@@ -1,5 +1,6 @@
 (ns fun-utils.core
- (:require [clojure.core.async :refer [go <! >! <!! >!! chan close! timeout]])
+ (:require [clojure.core.async :refer [go <! >! <!! >!! chan close! timeout]]
+           [clj-tuple :refer [tuple]])
  (:import [java.util.concurrent ExecutorService]
           [clojure.lang IFn]))
 
@@ -49,17 +50,17 @@
 		      star-channel-f (fn [key-val f args]
 												  (if wait-response
 							                (let [resp-ch (chan)]
-																			    (>!! master-ch [key-val resp-ch f args])
+																			    (>!! master-ch (tuple key-val resp-ch f args))
 																			    (<!! resp-ch))
-                              (go (>! master-ch [key-val nil f args]))))
+                              (go (>! master-ch (tuple key-val nil f args)))))
           close-f     (fn [& args]
                         (close! master-ch))]
 					(go 
 					  (loop [ch-map {}]
-					    (let [[key-val resp-ch f args] (let [v (<! master-ch)] v)
+					    (let [[key-val resp-ch f args] (<! master-ch)
 					          ch-map2 (apply-get-create ch-map 
 					                              key-val 
-					                              (fn [ch args] (go (>! ch [resp-ch f args]))) 
+					                              (fn [ch args] (go (>! ch (tuple resp-ch f args)))) 
 					                              create-ch
 					                              args)
 					                                      ]
