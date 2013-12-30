@@ -12,5 +12,6 @@
 
   :dependencies [
                  [midje "1.6-alpha2" :scope "test"]
-                 [org.clojure/core.async "0.1.242.0-44b1e3-alpha"]
-                 [org.clojure/clojure "1.5.1"]])
+                 [clj-tuple "0.1.4"]
+                 [org.clojure/core.async "0.1.267.0-0d7780-alpha"]
+                 [org.clojure/clojure "1.5.1" :scope "provided"]])

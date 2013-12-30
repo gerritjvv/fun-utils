@@ -62,8 +62,10 @@ Simple example
 
 ## star-channel
 
-The best way to handle concurrency is with no blocking and sending off messages to queues, but there are some cases where you want to wait for a value 
-to come back .e.g reading from a file, and the architecture is simpler or does not allow for sending off a method that eventually will get called.
+The best way to handle concurrency is with no blocking and sending off messages to queues.
+
+There are also some cases where you want to wait for a value 
+to come back .e.g reading from a file, or ensure that the calling order is respected.
 
 There is also a need to only block on a certain key, i.e. lets say we have a map of files that we write to, there are two points on concurrency concern,
 one is the modification of the map, and the other is the writing to the files.
@@ -71,6 +73,8 @@ one is the modification of the map, and the other is the writing to the files.
 To solve this we can use a single master channel to create a channel per file, add it to a map, and then write to the file and notify a response via a temporary channel.
 It happens also that this pattern can be abstracted to work with connections, dbs and any IO, it also provides implicit serialization of transactions where each
 transaction is denoted by a key and no retry is needed, making this pattern highly desirable in high write workloads.
+
+To block until the send function has completed set the :wait-response to true when calling the start-channel function.
 
 Example
 
@@ -81,7 +85,8 @@ Example
 (import 'java.io.File)
 
  (let [base-dir (doto (File. "target/tests/star-channel-tests/concurrent") (.mkdirs))
-       {:keys [send close]} (star-channel)
+       {:keys [send close]} (star-channel :wait-response true) ;if we set wait-response false the numbers written to the file will be out of order, 
+							       ;it does provide more concurrency, and if the ordering is not important use :wait-response false.
        file-a (doto (File. base-dir "file-a") (.delete) (.createNewFile))
        file-b (doto (File. base-dir "file-b") (.delete) (.createNewFile))
        exec (Executors/newCachedThreadPool)]

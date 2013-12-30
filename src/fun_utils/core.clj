@@ -21,15 +21,17 @@
        (apply f v args)
        (assoc m k v))))
 
-(defn star-channel [& {:keys [master-buff buff] :or {master-buff 100 buff 100}}]
+(defn star-channel [& {:keys [master-buff buff wait-response] :or {master-buff 100 buff 100 wait-response false}}]
     "Creates a start channel with a dispatcher channel and a workder channel per key
      A map of two functions are returned, on send, and the other close.
      Send has signuture (dispatch-key, function, function-args)
      Close takes no arguments and close all channels
-     Calls to send will block til the function returns, then function waits for execution
+     If wait-response is true calls to send will block til the function returns, then function waits for execution
      on a single channel identified by the key-val, i.e all functions for the same key will be run
      synchronously, 
-     if nil is returned the function returns [], this is because we can't return nil on a channel"
+     if wait-response if false, the send function will return inmediately (only if the master channel was not full)
+     if nil is returned the function returns [], this is because we can't return nil on a channel
+     "
 		(let [master-ch (chan master-buff) 
 		      create-ch (fn [& args]
 										  (let [ch (chan buff)]
@@ -41,12 +43,15 @@
                                        (apply f args)
 			                               (catch Exception e (throw (RuntimeException. (str "Error while applying " f " to " args " err: " e)))))
 			                             ]
-                              (>! resp-ch (if v v [])))))
+                              (if resp-ch
+                                (>! resp-ch (if v v []))))))
 										    ch))
 		      star-channel-f (fn [key-val f args]
-												  (let [resp-ch (chan)]
-												    (>!! master-ch [key-val resp-ch f args])
-												    (<!! resp-ch)))
+												  (if wait-response
+							                (let [resp-ch (chan)]
+																			    (>!! master-ch [key-val resp-ch f args])
+																			    (<!! resp-ch))
+                              (go (>! master-ch [key-val nil f args]))))
           close-f     (fn [& args]
                         (close! master-ch))]
 					(go 

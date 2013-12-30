@@ -20,7 +20,7 @@
              (let [
                    base-dir (doto (File. "target/tests/star-channel-tests/concurrent")
                                   (.mkdirs))
-                   {:keys [send close]} (star-channel)
+                   {:keys [send close]} (star-channel :wait-response true) ;we set wait-response to true, because we want the items to be written in order
                    file-a (doto (File. base-dir "file-a") (.delete) (.createNewFile))
                    file-b (doto (File. base-dir "file-b") (.delete) (.createNewFile))
                    exec (Executors/newCachedThreadPool)]
