@@ -1,10 +1,23 @@
 (ns fun-utils.core
  (:require [clojure.core.async :refer [go <! >! <!! >!! chan close! timeout]]
+           [clojure.core.async :as async]
            [clj-tuple :refer [tuple]])
  (:import [java.util.concurrent ExecutorService]
           [clojure.lang IFn]))
 
 
+(defn chan-bridge
+  ([ch-source map-f ch-target]
+   "map map-f onto ch-source and copy the result to ch-target"
+    (chan-bridge (async/map map-f [ch-source]) ch-target))         
+  ([ch-source ch-target]
+    "in a loop read from ch-source and write to ch-target
+     this function returns inmediately and returns the ch-target"    
+      (go 
+         (while (not (Thread/interrupted))
+              (if-let [v (<! ch-source)]
+                    (>! ch-target v))))
+      ch-target))
 
  (defn apply-get-create [m k f create-f & args]
    "Get a value from a map m using key k and apply the function f to the value

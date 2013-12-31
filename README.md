@@ -25,6 +25,33 @@ Example
  
 ```
 
+## Bridge two async channels
+
+```chan-bridge```
+
+Copies data from one channel and sends it to another, this is a simple function but one that saves
+typing when you just want to copy between channels and optionally apply a function.
+
+```
+
+(let [ch1 (chan 10)
+      ch2 (chan-bridge ch1 (chan 10))]
+           
+           (doseq [i (range 5)] (>!! ch1 i))
+               
+           (prn (reduce + (repeatedly 5 #(<!! ch2)))))
+;; 10
+
+(let [ch1 (chan 10)
+      ch2 (chan-bridge ch1 inc (chan 10))]
+               
+      (doseq [i (range 5)] (>!! ch1 i))
+               
+      (prn (reduce + (repeatedly 5 #(<!! ch2)))))
+;; 15
+```
+
+
 ## apply-get-create
 
 This function is more useful than it seems at first, mostly with agents, refs, atoms and channels.
