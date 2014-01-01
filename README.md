@@ -32,6 +32,8 @@ Example
 Copies data from one channel and sends it to another, this is a simple function but one that saves
 typing when you just want to copy between channels and optionally apply a function.
 
+Note: clojure.core.async provides pipe that also does bridging.
+
 ```
 
 (let [ch1 (chan 10)
