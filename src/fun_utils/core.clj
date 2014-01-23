@@ -60,12 +60,15 @@
                               (if resp-ch
                                 (>! resp-ch (if v v []))))))
 										    ch))
-		      star-channel-f (fn [key-val f args]
-												  (if wait-response
-							                (let [resp-ch (chan)]
-																			    (>!! master-ch (tuple key-val resp-ch f args))
-																			    (<!! resp-ch))
-                              (go (>! master-ch (tuple key-val nil f args)))))
+		      star-channel-f (fn star-channel-f
+	                         ([key-val f args]
+                             (star-channel-f wait-response key-val f args))
+	                         ([wait-response2 key-val f args]
+													  (if wait-response2
+								                (let [resp-ch (chan)]
+																				    (>!! master-ch (tuple key-val resp-ch f args))
+																				    (<!! resp-ch))
+	                              (go (>! master-ch (tuple key-val nil f args))))))
           close-f     (fn [& args]
                         (close! master-ch))]
 					(go 
