@@ -68,7 +68,7 @@
 								                (let [resp-ch (chan)]
 																				    (>!! master-ch (tuple key-val resp-ch f args))
 																				    (<!! resp-ch))
-	                              (go (>! master-ch (tuple key-val nil f args))))))
+	                              (>!! master-ch (tuple key-val nil f args)))))
           close-f     (fn [& args]
                         (close! master-ch))]
 					(go 
