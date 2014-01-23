@@ -105,7 +105,12 @@ transaction is denoted by a key and no retry is needed, making this pattern high
 
 To block until the send function has completed set the :wait-response to true when calling the start-channel function.
 
-Example
+### send 
+
+The send function has can be called either with ```(send :k (fn [n] n) 1)``` this will use the default wait-response parameter,
+or with ```(send false :k (fn [n] n) 1)``` and this will override the wait-response parameter.
+
+### Example
 
 ```clojure
 (use 'fun-utils.core)
