@@ -50,15 +50,18 @@
 		      create-ch (fn [& args]
 										  (let [ch (chan buff)]
 										    (go
-										      (while (not (Thread/interrupted))
-										        (let [[resp-ch f & args] (<! ch)
-                                  v
-			                              (try
-                                       (apply f args)
-			                               (catch Exception e (throw (RuntimeException. (str "Error while applying " f " to " args " err: " e)))))
-			                             ]
-                              (if resp-ch
-                                (>! resp-ch (if v v []))))))
+                          (loop []
+												      (when-let [ch-v (<! ch)]
+												        (let [[resp-ch f & args] ch-v
+		                                  v
+					                              (try
+		                                       (apply f args)
+					                               (catch Exception e (throw (RuntimeException. (str "Error while applying " f " to " args " err: " e)))))
+					                             ]
+		                              (if resp-ch
+		                                (>! resp-ch (if v v [])))
+                                  (recur)))))
+                              
 										    ch))
 		      star-channel-f (fn star-channel-f
 	                         ([key-val f args]
@@ -73,14 +76,22 @@
                         (close! master-ch))]
 					(go 
 					  (loop [ch-map {}]
-					    (let [[key-val resp-ch f args] (<! master-ch)
-					          ch-map2 (apply-get-create ch-map 
-					                              key-val 
-					                              (fn [ch args] (go (>! ch (tuple resp-ch f args)))) 
-					                              create-ch
-					                              args)
-					                                      ]
-							    (recur ch-map2))))
+              (when-let [ch-v (<! master-ch)]
+                (let [[key-val resp-ch f args] ch-v
+						          ch-map2 (cond 
+                                  (= f :remove)
+                                  (dissoc ch-map key-val)
+                                  :else 
+			                              (if-let [ch (get key-val ch-map)]
+                                        (do (>! ch (tuple resp-ch f args))
+                                            ch-map)
+                                        (let [ch (create-ch)]
+                                          (>! ch (tuple resp-ch f args))
+                                          (assoc ch-map key-val ch))))
+                                    
+						                                      ]
+                    
+								    (recur ch-map2)))))
 		   {:send star-channel-f :close close-f}
  		   ))
 		            
