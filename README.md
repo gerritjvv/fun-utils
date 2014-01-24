@@ -110,6 +110,11 @@ To block until the send function has completed set the :wait-response to true wh
 The send function has can be called either with ```(send :k (fn [n] n) 1)``` this will use the default wait-response parameter,
 or with ```(send false :k (fn [n] n) 1)``` and this will override the wait-response parameter.
 
+### removing keys
+
+If the keys grow with time the star channel's internal map will grow, its important to remove keys when they are no longer needed.
+To remove a key do ```(send :mykey :remove nil)```
+
 ### Example
 
 ```clojure

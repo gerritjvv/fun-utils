@@ -63,6 +63,14 @@
                                   (recur)))))
                               
 										    ch))
+          
+         apply-command (fn [command ch-map key-val]
+                          (cond
+                            (= command :remove)
+	                          (dissoc ch-map key-val)
+	                          :else 
+	                            ch-map))
+          
 		      star-channel-f (fn star-channel-f
 	                         ([key-val f args]
                              (star-channel-f wait-response key-val f args))
@@ -82,15 +90,29 @@
                                   (= f :remove)
                                   (dissoc ch-map key-val)
                                   :else 
-			                              (if-let [ch (get key-val ch-map)]
-                                        (do (>! ch (tuple resp-ch f args))
-                                            ch-map)
-                                        (let [ch (create-ch)]
-                                          (>! ch (tuple resp-ch f args))
-                                          (assoc ch-map key-val ch))))
+			                              
+                                     (if-let [ch (get key-val ch-map)]
+                                        (if (coll? f)
+                                            (let [[command f-n] f]
+                                                 ;apply a function then then the command, this allows us to send a function and remove a key in the same transaction
+                                                 (>! ch (tuple resp-ch f-n args))
+                                                 (apply-command command ch-map key-val)) 
+                                            (do 
+                                                (>! ch (tuple resp-ch f args))
+                                                ch-map))
+                                        
+                                        (let [ch (create-ch)
+                                              ch-map3 (assoc ch-map key-val ch)] ;;this is the duplicate of above, but >! does not work behind functions :(
+                                          (if (coll? f)
+                                            (let [[command f-n] f]
+                                                 (>! ch (tuple resp-ch f-n args))
+                                                 (apply-command command ch-map3 key-val)) 
+                                            (do 
+                                                (>! ch (tuple resp-ch f args))
+                                                ch-map3)))))
                                     
 						                                      ]
-                    
+                    (prn ch-map2)
 								    (recur ch-map2)))))
 		   {:send star-channel-f :close close-f}
  		   ))
