@@ -115,6 +115,9 @@ or with ```(send false :k (fn [n] n) 1)``` and this will override the wait-respo
 If the keys grow with time the star channel's internal map will grow, its important to remove keys when they are no longer needed.
 To remove a key do ```(send :mykey :remove nil)```
 
+You can also send a function and then in the same call remove the channel. To do this write ```(send :mykey [:remove inc] 1)```
+
+
 ### Example
 
 ```clojure
