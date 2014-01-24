@@ -112,8 +112,7 @@
                                                 ch-map3)))))
                                     
 						                                      ]
-                    (prn ch-map2)
-								    (recur ch-map2)))))
+                    (recur ch-map2)))))
 		   {:send star-channel-f :close close-f}
  		   ))
 		            
