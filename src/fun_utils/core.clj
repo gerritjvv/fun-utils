@@ -48,7 +48,7 @@
      "
 		(let [master-ch (chan master-buff) 
 		      create-ch (fn [& args]
-										  (let [ch (chan buff)]
+                      (let [ch (chan buff)]
 										    (thread ;we use thread here because of bug in go, with a go here two or more threads may run the go block at the same time
                           (loop []
 												      (when-let [ch-v (<!! ch)]
@@ -90,13 +90,14 @@
 					(thread 
 					  (loop [ch-map {}]
               (if-let [ch-v (<!! master-ch)]
-                (let [[key-val resp-ch f args] ch-v
+                (let [
+                      [key-val resp-ch f args] ch-v
 						          ch-map2 (cond 
                                   (= f :remove)
                                   (apply-command :remove ch-map key-val)
                                   :else 
 			                              
-                                     (if-let [ch (get key-val ch-map)]
+                                     (if-let [ch (get ch-map key-val)]
                                         (if (coll? f)
                                             (let [[command f-n] f]
                                                  ;apply a function then then the command, this allows us to send a function and remove a key in the same transaction

@@ -68,7 +68,7 @@
                                   (apply-command :remove ch-map key-val)
                                   :else 
 			                              
-                                     (if-let [ch (get key-val ch-map)]
+                                     (if-let [ch (get ch-map key-val)]
                                         (if (coll? f)
                                             (let [[command f-n] f]
                                                  ;apply a function then then the command, this allows us to send a function and remove a key in the same transaction
