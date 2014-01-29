@@ -17,23 +17,24 @@
      if wait-response if false, the send function will return inmediately (only if the master channel was not full)
      if nil is returned the function returns [], this is because we can't return nil on a channel
      "
-		(let [master-ch (chan master-buff) 
-		      create-ch (fn [& args]
-										  (let [ch (chan buff)]
-										    (go ;we use thread here because of bug in go, with a go here two or more threads may run the go block at the same time
-                          (loop []
-												      (when-let [ch-v (<! ch)]
-												        (let [[resp-ch f & args] ch-v
-		                                  v
-					                              (try
-		                                     (apply f args)
-					                               (catch Exception e (throw (RuntimeException. (str "Error while applying " f " to " args " err: " e)))))
-					                             ]
-		                              (if resp-ch
-		                                (>! resp-ch (if v v [])))
+     (let [master-ch (chan master-buff) 
+           create-ch 
+              (fn [& args]
+                    (let [ch (chan buff)]
+		     (go 
+                        (loop []
+			    (when-let [ch-v (<! ch)]
+			      (let [[resp-ch f & args] ch-v
+                                    v
+				     (try
+		                        (apply f args)
+					(catch Exception e (throw (RuntimeException. (str "Error while applying " f " to " args " err: " e)))))
+				    ]
+		                  (if resp-ch
+		                     (>! resp-ch (if v v [])))
                                   (recur)))))
                               
-										    ch))
+		       ch))
          close-channel (fn [ch-map key-val]
                          (if-let [ch (get ch-map key-val)]
                            (close! ch)))
@@ -51,18 +52,18 @@
 	                         ([key-val f args]
                              (star-channel-f wait-response key-val f args))
 	                         ([wait-response2 key-val f args]
-													  (if wait-response2
-								                (let [resp-ch (chan)]
-																				    (>!! master-ch (tuple key-val resp-ch f args))
-																				    (<!! resp-ch))
+		                   (if wait-response2
+			             (let [resp-ch (chan)]
+					(>!! master-ch (tuple key-val resp-ch f args))
+					(<!! resp-ch))
 	                              (>!! master-ch (tuple key-val nil f args)))))
           close-f     (fn [& args]
                         (close! master-ch))]
-					(go 
-					  (loop [ch-map {}]
+	   (go 
+	    (loop [ch-map {}]
               (if-let [ch-v (<! master-ch)]
                 (let [[key-val resp-ch f args] ch-v
-						          ch-map2 (cond 
+	              ch-map2 (cond 
                                   (= f :remove)
                                   (apply-command :remove ch-map key-val)
                                   :else 
@@ -91,8 +92,7 @@
                     
                     (recur ch-map2))
                     (doseq [[key-val ch] ch-map]
-                      (close! ch))
-                )))
+                      (close! ch)))))
 		   {:send star-channel-f :close close-f}
  		   ))
 		            
@@ -129,8 +129,7 @@
 		          (.shutdown)
 		          (.awaitTermination 10 java.util.concurrent.TimeUnit/SECONDS))
     
-    ;(.close @out)
   
-    (clojure.pprint/pprint (slurp (.getAbsolutePath file-a)))))
+    )))
 
 
