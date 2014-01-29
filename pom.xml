@@ -16,7 +16,7 @@
   <scm>
     <connection>scm:git:git://github.com/gerritjvv/fun-utils.git</connection>
     <developerConnection>scm:git:ssh://git@github.com/gerritjvv/fun-utils.git</developerConnection>
-    <tag>a05551c0c8cd18be17c9f75b6beca6fdcfd8ab76
+    <tag>e0edb0c9268b8be86210a780ad34ba06bbce1c44
 </tag>
     <url>https://github.com/gerritjvv/fun-utils</url>
   </scm>

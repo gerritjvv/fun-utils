@@ -116,7 +116,7 @@
 		          (submit exec #(send :a (fn [f] 
                                      (.writeInt @out i)
                                      
-                                     (if (or (= i 7) (= i 7))
+                                     (if (= i 7)
                                        (let[_ (.close @out)
                                             o (java.io.DataOutputStream. (java.io.FileOutputStream. file-a true))
                                             f (fn [a] o)]
@@ -130,6 +130,6 @@
 		          (.awaitTermination 10 java.util.concurrent.TimeUnit/SECONDS))
     
   
-    )))
+    ))
 
 
