@@ -9,7 +9,7 @@ Best way to see how to use them is going through the unit tests.
 I've tried to test each utlity function in its own test file.
 
 ```
-[fun-utils "0.3.1"]
+[fun-utils "0.3.5"]
 ```
 
 ## fixdelay
@@ -20,9 +20,13 @@ Example
 
 ```clojure
 
-(fixdelay 1000 (prn "hi"))
+(def d (fixdelay 1000 (prn "hi")))
+
 ;; => Hi ...  every second
- 
+
+(stop-fixdelay d)
+;;stops the fixdelay
+
 ```
 
 ## Bridge two async channels

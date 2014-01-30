@@ -1,5 +1,5 @@
 (ns fun-utils.core
- (:require [clojure.core.async :refer [go <! >! <!! >!! chan close! thread timeout]]
+ (:require [clojure.core.async :refer [go <! >! <!! >!! alts! chan close! thread timeout]]
            [clojure.core.async :as async]
            [clj-tuple :refer [tuple]])
  (:import [java.util.concurrent ExecutorService]
@@ -49,9 +49,9 @@
 		(let [master-ch (chan master-buff) 
 		      create-ch (fn [& args]
                       (let [ch (chan buff)]
-										    (thread ;we use thread here because of bug in go, with a go here two or more threads may run the go block at the same time
+										    (go ;we use thread here because of bug in go, with a go here two or more threads may run the go block at the same time
                           (loop []
-												      (when-let [ch-v (<!! ch)]
+												      (when-let [ch-v (<! ch)]
 												        (let [[resp-ch f & args] ch-v
 		                                  v
 					                              (try
@@ -59,7 +59,7 @@
 					                               (catch Exception e (throw (RuntimeException. (str "Error while applying " f " to " args " err: " e)))))
 					                             ]
 		                              (if resp-ch
-		                                (>!! resp-ch (if v v [])))
+		                                (>! resp-ch (if v v [])))
                                   (recur)))))
                               
 										    ch))
@@ -87,7 +87,7 @@
 	                              (>!! master-ch (tuple key-val nil f args)))))
           close-f     (fn [& args]
                         (close! master-ch))]
-					(thread 
+					(go 
 					  (loop [ch-map {}]
               (if-let [ch-v (<!! master-ch)]
                 (let [
@@ -101,20 +101,20 @@
                                         (if (coll? f)
                                             (let [[command f-n] f]
                                                  ;apply a function then then the command, this allows us to send a function and remove a key in the same transaction
-                                                 (>!! ch (tuple resp-ch f-n args))
+                                                 (>! ch (tuple resp-ch f-n args))
                                                  (apply-command command ch-map key-val)) 
                                             (do 
-                                                (>!! ch (tuple resp-ch f args))
+                                                (>! ch (tuple resp-ch f args))
                                                 ch-map))
                                         
                                         (let [ch (create-ch)
                                               ch-map3 (assoc ch-map key-val ch)] ;;this is the duplicate of above, but >! does not work behind functions :(
                                           (if (coll? f)
                                             (let [[command f-n] f]
-                                                 (>!! ch (tuple resp-ch f-n args))
+                                                 (>! ch (tuple resp-ch f-n args))
                                                  (apply-command command ch-map3 key-val)) 
                                             (do 
-                                                (>!! ch (tuple resp-ch f args))
+                                                (>! ch (tuple resp-ch f args))
                                                 ch-map3)))))
                                     
 						                                      ]
@@ -140,9 +140,19 @@
     )
   )
 
+(defn stop-fixdelay [ch]
+  (close! ch))
+
 (defmacro fixdelay [ ms & body]
   "Runs the body every ms after the last appication of body completed"
-          `(go (loop [] (<! (timeout ~ms)) ~@body (recur))))
+  `(let [close-ch# (chan)]
+          (go (loop [] 
+                 (let [[v# ch#] (alts! [close-ch# (timeout ~ms)])]
+                   (if (not (= close-ch# ch#))
+                    (do 
+                      ~@body 
+                      (recur))))))
+          close-ch#))
 
 (defn submit [^ExecutorService service ^IFn f]
   "Helper function to type hint a function to a runnable, avoiding reflection
