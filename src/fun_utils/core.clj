@@ -179,14 +179,20 @@
     (let [ch-target (chan buffer-or-n)]
       (go
         (loop [buff [] t (timeout timeout-ms)]
-          (let [[v _] (alts! [ch-source t])
+          (let [[v ch] (alts! [ch-source t])
                 b (if v (conj buff v) buff)]
-            (if (or (>= (count b) buffer-count) (not v))
-              (do
-                (if (>= (count b) 0)
-                  (>! ch-target b)) ;send the buffer to the channel
-                (recur [] (timeout timeout-ms))) ;create a new buffer and new timeout
-              (recur b t))))) ;pass the new buffer and the current timeout
+            (if (or (= ch t) (not (nil? v))) 
+	            (do 
+               (if (or (>= (count b) buffer-count) (not v))
+	              (do
+	                (if (> (count b) 0)
+	                  (>! ch-target b)) ;send the buffer to the channel
+	                (recur [] (timeout timeout-ms)))) ;create a new buffer and new timeout
+	              (recur b t));pass the new buffer and the current timeout
+             (do ;on loop exit, if anything in the buffer send it
+               (if (> (count b) 0)
+                   (>! ch-target b)))
+             )))) 
             ch-target)))
   
   
