@@ -9,7 +9,7 @@ Best way to see how to use them is going through the unit tests.
 I've tried to test each utlity function in its own test file.
 
 ```
-[fun-utils "0.3.6"]
+[fun-utils "0.4.0"]
 ```
 
 ## fixdelay
@@ -54,6 +54,8 @@ if we run the below code, the loop will spin without pause.
 To avoid this we write
 
 ```
+(require '[clojure.core.async :refer [go-loop chan <! close!]])
+(require '[fun-utils.core :refer [go-seq]])
 
 (def ch (chan 10))
 (go-loop []
@@ -66,6 +68,9 @@ To avoid this we write
 To make this pattern easier we can use go-seq like so:
 
 ```
+(require '[clojure.core.async :refer [go-loop chan <! close!]])
+(require '[fun-utils.core :refer [go-seq]])
+
 (def ch (chan 10))
 
 (go-seq #(prn v) ch)
@@ -79,6 +84,9 @@ To make this pattern easier we can use go-seq like so:
 For multiple channels, the function is called as (f v ch) and if f returns false the loop is terminated.
 
 ```
+(require '[clojure.core.async :refer [go-loop chan <! close!]])
+(require '[fun-utils.core :refer [go-seq]])
+
 (def ch1 (chan 10))
 (def ch2 (chan 10))
 (def ch3 (chan 10))
