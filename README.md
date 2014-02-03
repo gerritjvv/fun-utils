@@ -29,9 +29,73 @@ Example
 
 ```
 
+## go-seq
+
+When writing go blocks there is a repeating pattern to avoid 100% cpu spin when the channel is closed.
+
+e.g.
+if we run the below code, the loop will spin without pause.
+
+```
+(require '[clojure.core.async :refer [go-loop chan <! close!]])
+(require '[fun-utils.core :refer [go-seq]])
+
+;;running this code will cause nil to be printed without pause
+;;it shows how a bug can be introduced easily by not checking for nil
+
+(def ch (chan 10))
+(go-loop []
+   (let [v (<! ch)]
+     (prn v) (recur)))
+     
+(close! ch)
+```
+
+To avoid this we write
+
+```
+
+(def ch (chan 10))
+(go-loop []
+ (if-let [v (<! ch)]
+   (do (prn v) (recur))))
+   
+(close! ch)
+```
+
+To make this pattern easier we can use go-seq like so:
+
+```
+(def ch (chan 10))
+
+(go-seq #(prn v) ch)
+;; go-seq will call the function every time a none nil value is seen on ch
+;; if a nil value is seen the loop is terminated
+
+(close! ch)
+
+```
+
+For multiple channels, the function is called as (f v ch) and if f returns false the loop is terminated.
+
+```
+(def ch1 (chan 10))
+(def ch2 (chan 10))
+(def ch3 (chan 10))
+
+(go-seq (fn [v ch]
+          (if v
+           (prn v)
+           false)) ch1 ch2 ch3)
+           
+(close! ch1)
+(close! ch2) 
+(close! ch3)
+
+```
 ## Bridge two async channels
 
-chan-bridge
+###chan-bridge
 
 Copies data from one channel and sends it to another, this is a simple function but one that saves
 typing when you just want to copy between channels and optionally apply a function.
