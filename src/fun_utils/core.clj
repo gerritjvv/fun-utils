@@ -1,5 +1,5 @@
 (ns fun-utils.core
- (:require [clojure.core.async :refer [go <! >! <!! >!! alts! chan close! thread timeout]]
+ (:require [clojure.core.async :refer [go <! >! <!! >!! alts! chan close! thread timeout go-loop]]
            [clojure.core.async :as async]
            [clj-tuple :refer [tuple]])
  (:import [java.util.concurrent ExecutorService]
@@ -34,7 +34,25 @@
        (apply f v args)
        (assoc m k v))))
 
- 
+
+(defn go-seq 
+  ([f ch]
+  "Waits in a goo loop with (<! ch) if v is nil f is not called and the loop is not recurred
+   otherwise if is called as (f ch)"
+   (go-loop []
+     (if-let [v (<! ch)]
+       (do 
+         (f v)
+         (recur)))))
+  ([f ch & chs]
+	  "Waits in a go loop with alts! chs, if a result is attained
+	   f is called as (f v ch) if f returns false the loop is not recurred"
+   (let [chs2 (cons ch chs)]
+		  (go-loop []
+		    (let [[v ch] (alts! chs2)]
+		      (if (f v ch)
+		        (recur)))))))
+  
 (defn star-channel [& {:keys [master-buff buff wait-response] :or {master-buff 100 buff 100 wait-response false}}]
     "Creates a start channel with a dispatcher channel and a workder channel per key
      A map of two functions are returned, on send, and the other close.
