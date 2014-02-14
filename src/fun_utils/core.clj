@@ -74,7 +74,7 @@
 		                                  v
 					                              (try
 		                                     (apply f args)
-					                               (catch Exception e (throw (RuntimeException. (str "Error while applying " f " to " args " err: " e)))))
+					                               (catch Exception e (do (.printStackTrace ^Exception e) (throw (RuntimeException. (str "Error while applying " f " to " args " err: " e))))))
 					                             ]
 		                              (if resp-ch
 		                                (>! resp-ch (if v v [])))
@@ -188,25 +188,35 @@
     v1
     (-> (apply conj v1 v2) set vec)))
 
+(defn always-false 
+      ([] (tuple false nil))
+      ([prev v] (tuple false nil)))
+
 (defn buffered-chan 
   "Reads from ch-source and if either timeout or the buffer-count has been
    read the result it sent to the channel thats returned from this function"
   ([ch-source buffer-count timeout-ms]
     (buffered-chan ch-source buffer-count timeout-ms 1))
   ([ch-source buffer-count timeout-ms buffer-or-n]
+    (buffered-chan ch-source buffer-count timeout-ms buffer-or-n always-false))
+  ([ch-source buffer-count timeout-ms buffer-or-n check-f]
+    "check-f must be callable with zero and two arguments and returns a tuple of [boolean-val state]
+     the state variable will be given to check-f when its called next together with the vector buffer,
+     this allows check-f to accumulate counts etc, see always-false"
+    
     (let [ch-target (chan buffer-or-n)]
       (go
-        (loop [buff [] t (timeout timeout-ms)]
+        (loop [buff [] t (timeout timeout-ms) prev-v (check-f)]
           (let [[v ch] (alts! [ch-source t])
                 b (if v (conj buff v) buff)]
             (if (or (= ch t) (not (nil? v))) 
-	            (do 
-               (if (or (>= (count b) buffer-count) (not v))
+	            (let [[break? prev-2] (check-f prev-v b)]
+               (if (or (>= (count b) buffer-count) (not v) break?)
 	              (do
 	                (if (> (count b) 0)
 	                  (>! ch-target b)) ;send the buffer to the channel
-	                (recur [] (timeout timeout-ms)))) ;create a new buffer and new timeout
-	              (recur b t));pass the new buffer and the current timeout
+	                (recur [] (timeout timeout-ms) prev-2))) ;create a new buffer and new timeout
+	              (recur b t prev-2));pass the new buffer and the current timeout
              (do ;on loop exit, if anything in the buffer send it
                (if (> (count b) 0)
                    (>! ch-target b)))

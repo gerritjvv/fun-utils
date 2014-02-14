@@ -9,7 +9,7 @@ Best way to see how to use them is going through the unit tests.
 I've tried to test each utlity function in its own test file.
 
 ```
-[fun-utils "0.4.0"]
+[fun-utils "0.4.1"]
 ```
 
 ## fixdelay
@@ -36,7 +36,7 @@ When writing go blocks there is a repeating pattern to avoid 100% cpu spin when 
 e.g.
 if we run the below code, the loop will spin without pause.
 
-```
+```clojure
 (require '[clojure.core.async :refer [go-loop chan <! close!]])
 (require '[fun-utils.core :refer [go-seq]])
 
@@ -53,7 +53,7 @@ if we run the below code, the loop will spin without pause.
 
 To avoid this we write
 
-```
+```clojure
 (require '[clojure.core.async :refer [go-loop chan <! close!]])
 (require '[fun-utils.core :refer [go-seq]])
 
@@ -67,7 +67,7 @@ To avoid this we write
 
 To make this pattern easier we can use go-seq like so:
 
-```
+```clojure
 (require '[clojure.core.async :refer [go-loop chan <! close!]])
 (require '[fun-utils.core :refer [go-seq]])
 
@@ -83,7 +83,7 @@ To make this pattern easier we can use go-seq like so:
 
 For multiple channels, the function is called as (f v ch) and if f returns false the loop is terminated.
 
-```
+```clojure
 (require '[clojure.core.async :refer [go-loop chan <! close!]])
 (require '[fun-utils.core :refer [go-seq]])
 
@@ -110,7 +110,7 @@ typing when you just want to copy between channels and optionally apply a functi
 
 Note: clojure.core.async provides pipe that also does bridging.
 
-```
+```clojure
 
 (let [ch1 (chan 10)
       ch2 (chan-bridge ch1 (chan 10))]
@@ -254,7 +254,11 @@ on a predefined timeout do the operation with the results collected.
 ;; "got " [70 71 72 73 74 75 76 77 78 79]
 ;; "got " [80 81 82 83 84 85 86 87 88 89]
 ;; "got " [90 91 92 93 94 95 96 97 98 99]
-          
+
+;; the buffered-chan excepts a check function as last argument [ch-source buffer-count timeout-ms buffer-or-n check-f] 
+;; that allows for custom checking apart from the count and timeout
+;; please see fun-utils.buffered-chan-tests for more information
+
 ```
 
 

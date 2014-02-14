@@ -29,6 +29,19 @@
                (<!! buff-ch) => [1]
                
              ))
+       
+       (fact "Test using custom function"
+         (let [ch-source (chan)
+                   buff-ch (buffered-chan ch-source 10 10000 10 (fn 
+                                                                  ([] [false nil] )
+                                                                  ([acc v] [(= v [1 2]) nil])))]
+               (>!! ch-source 1)
+               (>!! ch-source 2)
+               
+               (Thread/sleep 200)
+               (<!! buff-ch) => [1 2]
+               
+             ))
        )
                
              
