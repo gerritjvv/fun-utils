@@ -1,8 +1,10 @@
-(defproject fun-utils "0.4.1"
+(defproject fun-utils "0.4.2"
   :description "Clojure utility functions that come up time and again while developing clojure software"
   :url "https://github.com/gerritjvv/fun-utils"
   :license {:name "ECLIPSE PUBLIC LICENSE"
             :url "http://www.eclipse.org/legal/epl-v10.html"}
+
+  :javac-options ["-target" "1.6" "-source" "1.6" "-Xlint:-options"]
 
   :plugins [
          [lein-rpm "0.0.5"] [lein-midje "3.0.1"] [lein-marginalia "0.7.1"]
