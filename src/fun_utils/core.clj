@@ -108,7 +108,8 @@
         ch-map-view (AtomicReference. nil)]
     (go
       (loop [ch-map {}]
-        (if-let [ch-v (<! master-ch)]
+        ;some bug here in channels causes us to use <!! instead of <! i.e using <! returns nil always and <!! return the value expected
+        (if-let [ch-v (<!! master-ch)]
           (let [
                  [key-val resp-ch f args] ch-v
                  ch-map2 (cond
