@@ -4,7 +4,7 @@
   (:use midje.sweet))
 
 (facts "Test fixdelay"
-       
+
        (fact "Test fix delay runs"
              (let [counter (AtomicInteger.)]
                (fixdelay 100 (.incrementAndGet counter))
