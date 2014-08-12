@@ -1,7 +1,8 @@
 (ns fun-utils.star-channel-tests
   (:require [fun-utils.core :refer [star-channel submit]])
   (:import [java.io File]
-           [java.util.concurrent Executors TimeUnit])
+           [java.util.concurrent Executors TimeUnit]
+           (java.util.concurrent.atomic AtomicInteger))
   (:use midje.sweet))
 
 
@@ -15,6 +16,17 @@
                  (send :b inc 1) => 2
 
                  )))
+       (fact "Check key removal"
+             (let [star (star-channel :wait-response true)
+                   send (:send star)
+                   call-count (AtomicInteger. 0)
+                   map-view (fn [] (-> star :ch-map-view (.get)))]
+               (send "abc1" (fn [f] (.incrementAndGet call-count)) nil)
+               (send "abc2" (fn [f] (.incrementAndGet call-count)) nil)
+
+               (send "abc1" [:remove (fn [f] (.incrementAndGet call-count))] nil)
+               (-> (map-view) keys) => ["abc2"]
+               (.get call-count) => 3))
        (fact "Check concurrency"
              ;star-channel [& {:keys [master-buff buff] :or {master-buff 100 buff 100}}]
              (let [

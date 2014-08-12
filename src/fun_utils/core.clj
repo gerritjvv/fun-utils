@@ -110,29 +110,31 @@
       (loop [ch-map {}]
         ;some bug here in channels causes us to use <!! instead of <! i.e using <! returns nil always and <!! return the value expected
         (if-let [ch-v (<!! master-ch)]
-          (let [
-                 [key-val resp-ch f args] ch-v
+
+          (let [ [key-val resp-ch f args] ch-v
                  ch-map2 (cond
                            (= f :remove)
                            (apply-command :remove ch-map key-val)
                            :else
                            (if-let [ch (get ch-map key-val)]
-                             (when (coll? f)
+                             (if (coll? f)
                                (let [[command f-n] f]
                                  ;apply a function then then the command, this allows us to send a function and remove a key in the same transaction
                                  (>! ch (tuple resp-ch f-n args))
                                  (apply-command command ch-map key-val))
-                               (>! ch (tuple resp-ch f args))
-                               ch-map)
+                               (do
+                                 (>! ch (tuple resp-ch f args))
+                                 ch-map))
 
-                             (let [ch (create-ch)
+                              (let [ch (create-ch)
                                    ch-map3 (assoc ch-map key-val ch)] ;;this is the duplicate of above, but >! does not work behind functions :(
-                               (when (coll? f)
+                               (if (coll? f)
                                  (let [[command f-n] f]
                                    (>! ch (tuple resp-ch f-n args))
                                    (apply-command command ch-map3 key-val))
-                                 (>! ch (tuple resp-ch f args))
-                                 ch-map3))))]
+                                 (do
+                                   (>! ch (tuple resp-ch f args))
+                                   ch-map3)))))]
             ;we use this for testing introspection and tooling to allow viewing what keys are in the star map
             ;but this is not an atom nor a ref its only a view
             (.set ^AtomicReference ch-map-view ch-map2)
