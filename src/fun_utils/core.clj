@@ -106,10 +106,10 @@
         close-f (fn [& args]
                   (close! master-ch))
         ch-map-view (AtomicReference. nil)]
-    (thread
+    (go
       (loop [ch-map {}]
         ;some bug here in channels causes us to use <!! instead of <! i.e using <! returns nil always and <!! return the value expected
-        (if-let [ch-v (<!! master-ch)]
+        (if-let [ch-v (<! master-ch)]
 
           (let [ [key-val resp-ch f args] ch-v
                  ch-map2 (cond
@@ -120,20 +120,20 @@
                              (if (coll? f)
                                (let [[command f-n] f]
                                  ;apply a function then then the command, this allows us to send a function and remove a key in the same transaction
-                                 (>!! ch (tuple resp-ch f-n args))
+                                 (>! ch (tuple resp-ch f-n args))
                                  (apply-command command ch-map key-val))
                                (do
-                                 (>!! ch (tuple resp-ch f args))
+                                 (>! ch (tuple resp-ch f args))
                                  ch-map))
 
                               (let [ch (create-ch)
                                    ch-map3 (assoc ch-map key-val ch)] ;;this is the duplicate of above, but >! does not work behind functions :(
                                (if (coll? f)
                                  (let [[command f-n] f]
-                                   (>!! ch (tuple resp-ch f-n args))
+                                   (>! ch (tuple resp-ch f-n args))
                                    (apply-command command ch-map3 key-val))
                                  (do
-                                   (>!! ch (tuple resp-ch f args))
+                                   (>! ch (tuple resp-ch f args))
                                    ch-map3)))))]
             ;we use this for testing introspection and tooling to allow viewing what keys are in the star map
             ;but this is not an atom nor a ref its only a view
@@ -207,7 +207,10 @@
        (loop [buff [] t (timeout timeout-ms) prev-v (check-f)]
          (let [[v ch] (alts! [ch-source t])
                b (if v (conj buff v) buff)]
-           (if (or (= ch t) (not (nil? v)))
+           (if (and (not (= ch t)) (nil? v))
+             (do                                            ;on loop exit, if anything in the buffer send it
+               (if (> (count b) 0)
+                 (>! ch-target b)))
              (let [[break? prev-2] (check-f prev-v b)
                    [b2 t2] (if (or (>= (count b) buffer-count) (not v) break?)
                              (do
@@ -217,9 +220,6 @@
                              [b t])]
                ;create a new buffer and new timeout
                (recur b2 t2 prev-2))                        ;pass the new buffer and the current timeout
-             (do                                            ;on loop exit, if anything in the buffer send it
-               (if (> (count b) 0)
-                 (>! ch-target b)))
              ))))
      ch-target)))
   
