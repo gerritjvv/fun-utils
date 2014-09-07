@@ -1,6 +1,10 @@
 (ns fun-utils.core
+  (:import (java.util.concurrent ExecutorService)
+           (clojure.lang IFn)
+           (java.util.concurrent.atomic AtomicReference AtomicLong AtomicBoolean))
   (:require [clojure.core.async :refer [go <! >! <!! >!! alts! chan close! thread timeout go-loop]]
             [clojure.core.async :as async]
+            [clojure.tools.logging :refer [info error]]
             [clj-tuple :refer [tuple]])
   (:import [java.util.concurrent ExecutorService]
            [clojure.lang IFn]
@@ -66,24 +70,27 @@
   [& {:keys [master-buff buff wait-response] :or {master-buff 100 buff 100 wait-response false}}]
   (let [master-ch (chan master-buff)
         create-ch (fn [& args]
-                    (let [ch (chan buff)]
-                      (go                                   ;we use thread here because of bug in go, with a go here two or more threads may run the go block at the same time
+                    (let [ch (chan buff)
+                          ^AtomicLong status (AtomicLong.)]
+                      (thread                                   ;we use thread here because of bug in go, with a go here two or more threads may run the go block at the same time
                         (loop []
-                          (when-let [ch-v (<! ch)]
+                          (if-let [ch-v (<!! ch)]
                             (let [[resp-ch f & args] ch-v
                                   v
                                   (try
-                                    (apply f args)
-                                    (catch Exception e (do (.printStackTrace ^Exception e) (throw (RuntimeException. (str "Error while applying " f " to " args " err: " e))))))
+                                    (apply f args)          ;we cannot throw any exception here, otherwise the channel will exit and we create a deadlock in the master loop
+                                    (catch Exception e (do (error e e))))
                                   ]
                               (if resp-ch
-                                (>! resp-ch (if v v [])))
-                              (recur)))))
+                                (>!! resp-ch (if v v [])))
+                              (.incrementAndGet status)
+                              (recur))
+                            (.set status -100))))
 
-                      ch))
+                      [status ch]))
         close-channel (fn [ch-map key-val]
                         (if-let [ch (get ch-map key-val)]
-                          (close! ch)))
+                          (close! (second ch))))
 
         apply-command (fn [command ch-map key-val]
                         (cond
@@ -105,43 +112,53 @@
                             (>!! master-ch (tuple key-val nil f args)))))
         close-f (fn [& args]
                   (close! master-ch))
+        master-activity (AtomicLong. 0)
+        master-exit (AtomicBoolean. false)
+
         ch-map-view (AtomicReference. nil)]
-    (go
+    (thread
       (loop [ch-map {}]
         ;some bug here in channels causes us to use <!! instead of <! i.e using <! returns nil always and <!! return the value expected
-        (if-let [ch-v (<! master-ch)]
+        (if-let [ch-v (<!! master-ch)]
+          (let [m
+                (try
+                  (let [ [key-val resp-ch f args] ch-v
+                         ch-map2 (cond
+                                   (= f :remove)
+                                   (apply-command :remove ch-map key-val)
+                                   :else
+                                   (if-let [ch (get ch-map key-val)]
+                                     (if (coll? f)
+                                       (let [[command f-n] f]
+                                         ;apply a function then then the command, this allows us to send a function and remove a key in the same transaction
+                                         (>!! (second ch) (tuple resp-ch f-n args))
+                                         (apply-command command ch-map key-val))
+                                       (do
+                                         (>!! (second ch) (tuple resp-ch f args))
+                                         ch-map))
 
-          (let [ [key-val resp-ch f args] ch-v
-                 ch-map2 (cond
-                           (= f :remove)
-                           (apply-command :remove ch-map key-val)
-                           :else
-                           (if-let [ch (get ch-map key-val)]
-                             (if (coll? f)
-                               (let [[command f-n] f]
-                                 ;apply a function then then the command, this allows us to send a function and remove a key in the same transaction
-                                 (>! ch (tuple resp-ch f-n args))
-                                 (apply-command command ch-map key-val))
-                               (do
-                                 (>! ch (tuple resp-ch f args))
-                                 ch-map))
-
-                              (let [ch (create-ch)
-                                   ch-map3 (assoc ch-map key-val ch)] ;;this is the duplicate of above, but >! does not work behind functions :(
-                               (if (coll? f)
-                                 (let [[command f-n] f]
-                                   (>! ch (tuple resp-ch f-n args))
-                                   (apply-command command ch-map3 key-val))
-                                 (do
-                                   (>! ch (tuple resp-ch f args))
-                                   ch-map3)))))]
-            ;we use this for testing introspection and tooling to allow viewing what keys are in the star map
-            ;but this is not an atom nor a ref its only a view
-            (.set ^AtomicReference ch-map-view ch-map2)
-            (recur ch-map2))
-          (doseq [[key-val ch] ch-map]
-            (close! ch)))))
-    {:send star-channel-f :close close-f :ch-map-view ch-map-view}))
+                                     (let [ch (create-ch)
+                                           ch-map3 (assoc ch-map key-val ch)] ;;this is the duplicate of above, but >! does not work behind functions :(
+                                       (if (coll? f)
+                                         (let [[command f-n] f]
+                                           (>!! (second ch) (tuple resp-ch f-n args))
+                                           (apply-command command ch-map3 key-val))
+                                         (do
+                                           (>!! (second ch) (tuple resp-ch f args))
+                                           ch-map3)))))]
+                    ;we use this for testing introspection and tooling to allow viewing what keys are in the star map
+                    ;but this is not an atom nor a ref its only a view
+                    (.set ^AtomicReference ch-map-view ch-map2)
+                    ch-map2)
+                  (catch Exception e (do (error e e) ch-map)))]
+            (.incrementAndGet ^AtomicLong master-activity)
+            (recur m))
+          (do
+            (info "Closing star channel")
+            (.set master-exit true)
+            (doseq [[key-val ch] ch-map]
+              (close! (second ch)))))))
+    {:send star-channel-f :close close-f :ch-map-view ch-map-view :master-actitivy master-activity :master-exit master-exit}))
 
 
 (defn buffered-select
