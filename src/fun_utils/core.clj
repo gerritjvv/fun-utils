@@ -2,7 +2,7 @@
   (:import (java.util.concurrent ExecutorService)
            (clojure.lang IFn)
            (java.util.concurrent.atomic AtomicReference AtomicLong AtomicBoolean))
-  (:require [clojure.core.async :refer [go <! >! <!! >!! alts! chan close! thread timeout go-loop]]
+  (:require [clojure.core.async :refer [go <! >! <!! >!! alts! alts!! chan close! thread timeout go-loop]]
             [clojure.core.async :as async]
             [clojure.tools.logging :refer [info error]]
             [clj-tuple :refer [tuple]])
@@ -39,6 +39,28 @@
       (apply f v args)
       (assoc m k v))))
 
+
+
+(defn thread-seq
+  "  This function is the same as go-seq with the exception that it runs in a thread.
+     If you are running IO or blocking code its important to not use go blocks.
+     The thread will exit when the channel is closed.
+     Waits in a thread loop with alts!! chs, if a result is attained
+	   f is called as (f v ch) if f returns false the loop is not recurred"
+  ([f ch]
+   (thread
+     (loop []
+       (if-let [v (<!! ch)]
+         (do
+           (f v)
+           (recur))))))
+  ([f ch & chs]
+   (let [chs2 (cons ch chs)]
+     (thread
+       (loop []
+             (let [[v ch] (alts!! chs2)]
+               (if (f v ch)
+                 (recur))))))))
 
 (defn go-seq
   "Waits in a go loop with alts! chs, if a result is attained
@@ -178,6 +200,20 @@
   `(let [close-ch# (chan)]
      (go (loop []
            (let [[v# ch#] (alts! [close-ch# (timeout ~ms)])]
+             (if (not (= close-ch# ch#))
+               (do
+                 ~@body
+                 (recur))))))
+     close-ch#))
+
+(defmacro fixdelay-thread
+  "Runs the body every ms after the last appication of body completed, the code is run in a separate Thread
+   Returns a channel that when passed to stop-fixdelay will close this thread"
+  [ms & body]
+  `(let [close-ch# (chan)]
+     (thread
+       (loop []
+           (let [[v# ch#] (alts!! [close-ch# (timeout ~ms)])]
              (if (not (= close-ch# ch#))
                (do
                  ~@body

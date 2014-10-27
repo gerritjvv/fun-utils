@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<module cursive.leiningen.project.LeiningenProjectsManager.isLeinModule="true" type="JAVA_MODULE" version="4">
+  <component name="NewModuleRootManager" inherit-compiler-output="false">
+    <output url="file://$MODULE_DIR$/target/classes" />
+    <output-test url="file://$MODULE_DIR$/target/classes" />
+    <exclude-output />
+    <content url="file://$MODULE_DIR$">
+      <sourceFolder url="file://$MODULE_DIR$/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/test" isTestSource="true" />
+      <excludeFolder url="file://$MODULE_DIR$/target" />
+    </content>
+    <orderEntry type="jdk" jdkName="1.7" jdkType="JavaSDK" />
+    <orderEntry type="sourceFolder" forTests="false" />
+    <orderEntry type="library" name="Leiningen: clj-tuple:0.1.4" level="project" />
+    <orderEntry type="library" name="Leiningen: clojure-complete:0.2.3" level="project" />
+    <orderEntry type="library" scope="TEST" name="Leiningen: midje:1.6-alpha2" level="project" />
+    <orderEntry type="library" scope="PROVIDED" name="Leiningen: org.clojure/clojure:1.6.0" level="project" />
+    <orderEntry type="library" name="Leiningen: org.clojure/core.async:0.1.267.0-0d7780-alpha" level="project" />
+    <orderEntry type="library" name="Leiningen: org.clojure/tools.logging:0.3.0" level="project" />
+    <orderEntry type="library" name="Leiningen: org.clojure/tools.nrepl:0.2.3" level="project" />
+    <orderEntry type="library" scope="TEST" name="Leiningen: bultitude:0.1.7" level="project" />
+    <orderEntry type="library" scope="TEST" name="Leiningen: colorize:0.1.1" level="project" />
+    <orderEntry type="library" scope="TEST" name="Leiningen: commons-codec:1.6" level="project" />
+    <orderEntry type="library" scope="TEST" name="Leiningen: gui-diff:0.5.0" level="project" />
+    <orderEntry type="library" scope="TEST" name="Leiningen: ordered:1.2.0" level="project" />
+    <orderEntry type="library" scope="TEST" name="Leiningen: org.clojure/algo.monads:0.1.0" level="project" />
+    <orderEntry type="library" scope="TEST" name="Leiningen: org.clojure/core.unify:0.5.2" level="project" />
+    <orderEntry type="library" scope="TEST" name="Leiningen: org.clojure/math.combinatorics:0.0.1" level="project" />
+    <orderEntry type="library" scope="TEST" name="Leiningen: org.clojure/tools.macro:0.1.1" level="project" />
+    <orderEntry type="library" scope="TEST" name="Leiningen: org.clojure/tools.namespace:0.2.2" level="project" />
+    <orderEntry type="library" scope="TEST" name="Leiningen: slingshot:0.10.3" level="project" />
+    <orderEntry type="library" scope="TEST" name="Leiningen: swiss-arrows:0.1.0" level="project" />
+    <orderEntry type="library" scope="TEST" name="Leiningen: utilize:0.2.3" level="project" />
+    <orderEntry type="library" scope="TEST" name="Leiningen: org.clojars.trptcolin/sjacket:0.1.3" level="project" />
+    <orderEntry type="library" scope="TEST" name="Leiningen: net.cgrand/parsley:0.9.1" level="project" />
+    <orderEntry type="library" scope="TEST" name="Leiningen: net.cgrand/regex:1.1.0" level="project" />
+    <orderEntry type="library" scope="TEST" name="Leiningen: joda-time:2.0" level="project" />
+  </component>
+</module>
+

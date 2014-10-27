@@ -10,7 +10,7 @@ I've tried to test each utlity function in its own test file.
 
 [![Clojars Project](http://clojars.org/fun-utils/latest-version.svg)](http://clojars.org/fun-utils)
 
-## fixdelay
+## fixdelay and fixdelay-thread
 
 Use's clojure.core.async timeout to run an expression every n milliseconds.
 
@@ -19,7 +19,7 @@ Example
 ```clojure
 
 (def d (fixdelay 1000 (prn "hi")))
-
+;; for IO code use fixdelay-thread
 ;; => Hi ...  every second
 
 (stop-fixdelay d)
@@ -27,8 +27,10 @@ Example
 
 ```
 
-## go-seq
 
+## go-seq and thread-seq
+
+Note: in all of the examples below go-seq can be changed for thread-seq, use thread-seq if you are running IO code.  
 When writing go blocks there is a repeating pattern to avoid 100% cpu spin when the channel is closed.
 
 e.g.
