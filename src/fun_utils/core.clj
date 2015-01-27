@@ -1,14 +1,12 @@
 (ns fun-utils.core
   (:import (java.util.concurrent ExecutorService)
            (clojure.lang IFn)
+           (java.util ArrayList)
            (java.util.concurrent.atomic AtomicReference AtomicLong AtomicBoolean))
   (:require [clojure.core.async :refer [go <! >! <!! >!! alts! alts!! chan close! thread timeout go-loop]]
             [clojure.core.async :as async]
             [clojure.tools.logging :refer [info error]]
-            [clj-tuple :refer [tuple]])
-  (:import [java.util.concurrent ExecutorService]
-           [clojure.lang IFn]
-           (java.util.concurrent.atomic AtomicReference)))
+            [clj-tuple :refer [tuple]]))
 
 (defn chan-bridge
   "in a loop read from ch-source and write to ch-target
@@ -242,6 +240,13 @@
   ([] (tuple false nil))
   ([prev v] (tuple false nil)))
 
+(defn aconj! [^ArrayList a v]
+  (.add a v)
+  a)
+
+(defn asize [^ArrayList a] (.size a))
+(defn aclear! [^ArrayList a] (.clear a) a)
+
 (defn buffered-chan
   "Reads from ch-source and if either timeout or the buffer-count has been
    read the result it sent to the channel thats returned from this function
@@ -257,19 +262,19 @@
 
    (let [ch-target (chan buffer-or-n)]
      (go
-       (loop [buff [] t (timeout timeout-ms) prev-v (check-f)]
+       (loop [buff (ArrayList.) t (timeout timeout-ms) prev-v (check-f)]
          (let [[v ch] (alts! [ch-source t])
-               b (if v (conj buff v) buff)]
+               b (if v (aconj! buff v) buff)]
            (if (and (not (= ch t)) (nil? v))
              (do                                            ;on loop exit, if anything in the buffer send it
-               (if (> (count b) 0)
-                 (>! ch-target b)))
+               (if (> (asize b) 0)
+                 (>! ch-target (vec b))))
              (let [[break? prev-2] (check-f prev-v b)
-                   [b2 t2] (if (or (>= (count b) buffer-count) (not v) break?)
+                   [b2 t2] (if (or (>= (asize b) buffer-count) (not v) break?)
                              (do
-                               (if (> (count b) 0)
-                                 (>! ch-target b))          ;send the buffer to the channel
-                               [[] (timeout timeout-ms)])
+                               (if (> (asize b) 0)
+                                 (>! ch-target (vec b)))          ;send the buffer to the channel
+                               [(aclear! b) (timeout timeout-ms)])
                              [b t])]
                ;create a new buffer and new timeout
                (recur b2 t2 prev-2))                        ;pass the new buffer and the current timeout
