@@ -1,4 +1,4 @@
-(defproject fun-utils "0.5.1-SNAPSHOT"
+(defproject fun-utils "0.5.2-SNAPSHOT"
             :description "Clojure utility functions that come up time and again while developing clojure software"
             :url "https://github.com/gerritjvv/fun-utils"
             :license {:name "ECLIPSE PUBLIC LICENSE"
@@ -17,4 +17,6 @@
                             [clj-tuple "0.1.4"]
                             [org.clojure/tools.logging "0.3.0"]
                             [org.clojure/core.async "0.1.267.0-0d7780-alpha"]
-                            [org.clojure/clojure "1.6.0" :scope "provided"]])
+                            [org.clojure/clojure "1.6.0" :scope "provided"]
+                            [com.google.guava/guava "18.0"]
+                            [potemkin "0.3.11"]])
