@@ -10,6 +10,38 @@ I've tried to test each utlity function in its own test file.
 
 [![Clojars Project](http://clojars.org/fun-utils/latest-version.svg)](http://clojars.org/fun-utils)
 
+## cache
+
+The ```fun-utils.cache``` namespace provides a Clojure Map wrapper arround the Google's Guava Cache.
+It gives us all of the perfromance and usibility of the Guava Cache builder but with the convinience of
+acting as a Clojure map.
+
+I've found that the guava cache with expire-on-write is much more reliable and performant than using Clojure's
+own ttl cache.
+
+```clojure
+
+(def cache (c/create-cache))
+(assoc cache 1 :a)
+(get cache 1)
+;; :a
+
+(def cache-ttl (c/create-cache :expire-on-write 500))
+(get cache 1)
+;; nil
+(assoc cache 1 :a)
+(get cache 1)
+;; :a
+(Thread/sleep 1000)
+(get cache 1)
+;; nil
+
+(def cache2 (c/create-loading-cache (fn [k] [k 1])))
+(get cache 1)
+;; [1 1]
+
+```
+
 ## fixdelay and fixdelay-thread
 
 Use's clojure.core.async timeout to run an expression every n milliseconds.

@@ -3,7 +3,7 @@
   <groupId>fun-utils</groupId>
   <artifactId>fun-utils</artifactId>
   <packaging>jar</packaging>
-  <version>0.5.1-SNAPSHOT</version>
+  <version>0.5.2-SNAPSHOT</version>
   <name>fun-utils</name>
   <description>Clojure utility functions that come up time and again while developing clojure software</description>
   <url>https://github.com/gerritjvv/fun-utils</url>
@@ -16,7 +16,7 @@
   <scm>
     <connection>scm:git:git://github.com/gerritjvv/fun-utils.git</connection>
     <developerConnection>scm:git:ssh://git@github.com/gerritjvv/fun-utils.git</developerConnection>
-    <tag>734a7051e5fb78983ead8bf3c61224ffa16f1b71
+    <tag>6c591c4c708b2175204d57230e8b367720263068
 </tag>
     <url>https://github.com/gerritjvv/fun-utils</url>
   </scm>
@@ -89,6 +89,16 @@
       <artifactId>clojure</artifactId>
       <version>1.6.0</version>
       <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.google.guava</groupId>
+      <artifactId>guava</artifactId>
+      <version>18.0</version>
+    </dependency>
+    <dependency>
+      <groupId>potemkin</groupId>
+      <artifactId>potemkin</artifactId>
+      <version>0.3.11</version>
     </dependency>
     <dependency>
       <groupId>org.clojure</groupId>
