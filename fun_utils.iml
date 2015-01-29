@@ -15,11 +15,13 @@
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="library" name="Leiningen: clj-tuple:0.1.4" level="project" />
     <orderEntry type="library" name="Leiningen: clojure-complete:0.2.3" level="project" />
+    <orderEntry type="library" name="Leiningen: com.google.guava/guava:18.0" level="project" />
     <orderEntry type="library" scope="TEST" name="Leiningen: midje:1.6-alpha2" level="project" />
     <orderEntry type="library" scope="PROVIDED" name="Leiningen: org.clojure/clojure:1.6.0" level="project" />
     <orderEntry type="library" name="Leiningen: org.clojure/core.async:0.1.267.0-0d7780-alpha" level="project" />
     <orderEntry type="library" name="Leiningen: org.clojure/tools.logging:0.3.0" level="project" />
     <orderEntry type="library" name="Leiningen: org.clojure/tools.nrepl:0.2.3" level="project" />
+    <orderEntry type="library" name="Leiningen: potemkin:0.3.11" level="project" />
     <orderEntry type="library" scope="TEST" name="Leiningen: bultitude:0.1.7" level="project" />
     <orderEntry type="library" scope="TEST" name="Leiningen: colorize:0.1.1" level="project" />
     <orderEntry type="library" scope="TEST" name="Leiningen: commons-codec:1.6" level="project" />
@@ -37,5 +39,6 @@
     <orderEntry type="library" scope="TEST" name="Leiningen: net.cgrand/parsley:0.9.1" level="project" />
     <orderEntry type="library" scope="TEST" name="Leiningen: net.cgrand/regex:1.1.0" level="project" />
     <orderEntry type="library" scope="TEST" name="Leiningen: joda-time:2.0" level="project" />
+    <orderEntry type="library" name="Leiningen: riddley:0.1.7" level="project" />
   </component>
 </module>

@@ -78,8 +78,8 @@
 
 (defn create-loading-cache [loader-f & args]
   (:pre [(fn? loader-f)])
-  (GuavaLoadingCacheMap. (apply -create-loading-cache loader-f args) args))
+  (GuavaLoadingCacheMap. (apply -create-loading-cache loader-f args) {}))
 
 (defn create-cache
   [& args]
-  (GuavaCacheMap. (apply -create-cache args) args))
+  (GuavaCacheMap. (apply -create-cache args) {}))
