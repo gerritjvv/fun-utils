@@ -263,7 +263,7 @@
    (let [ch-target (chan buffer-or-n)]
      (go
        (loop [buff (ArrayList.) t (timeout timeout-ms) prev-v (check-f)]
-         (let [[v ch] (alts! [ch-source t])
+         (let [[v ch] (alts! (tuple ch-source t))
                b (if v (aconj! buff v) buff)]
            (if (and (not (= ch t)) (nil? v))
              (do                                            ;on loop exit, if anything in the buffer send it
@@ -274,8 +274,8 @@
                              (do
                                (if (> (asize b) 0)
                                  (>! ch-target (vec b)))          ;send the buffer to the channel
-                               [(aclear! b) (timeout timeout-ms)])
-                             [b t])]
+                               (tuple (aclear! b) (timeout timeout-ms)))
+                             (tuple b t))]
                ;create a new buffer and new timeout
                (recur b2 t2 prev-2))                        ;pass the new buffer and the current timeout
              ))))
