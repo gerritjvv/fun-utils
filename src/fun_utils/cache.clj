@@ -1,7 +1,8 @@
 (ns fun-utils.cache
   (:import [com.google.common.cache CacheBuilder CacheLoader Cache LoadingCache]
            [java.util.concurrent TimeUnit Callable])
-  (:require [potemkin.collections :refer [def-map-type]]))
+  (:require [potemkin.collections :refer [def-map-type]])
+  (:refer-clojure :exclude [memoize]))
 
 ;; Uses guava cache
 
@@ -83,3 +84,24 @@
 (defn create-cache
   [& args]
   (GuavaCacheMap. (apply -create-cache args) {}))
+
+
+(defn memoize-1
+  "Fast memoize for single arity functions backed by guava cache"
+  [f & args]
+  (let [c (apply create-loading-cache f args)]
+    (fn [k]
+      (get c k))))
+
+(defn memoize
+  "Memoize backed by guava cache"
+  [f & args]
+  (let [c (apply create-cache args)]
+    (fn [k & args]
+      (if-let [v (get c k)]
+        v
+        (let [v (apply f k args)]
+          (assoc c k v)
+          v)))))
+
+
