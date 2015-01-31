@@ -38,7 +38,6 @@
       (assoc m k v))))
 
 
-
 (defn thread-seq
   "  This function is the same as go-seq with the exception that it runs in a thread.
      If you are running IO or blocking code its important to not use go blocks.
