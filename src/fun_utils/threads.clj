@@ -48,7 +48,8 @@
 (defn shared-threads [threads]
   (let [executor (create-exec-service threads)
         chans-ref (ref #{})
-        fun-map-ref (ref {})]
+        fun-map-ref (ref {})
+        ctx  {:executor executor :chans-ref chans-ref :fun-map-ref fun-map-ref}]
     (submit executor
             (fn []
               (while (not (.isInterrupted (Thread/currentThread)))
@@ -57,9 +58,10 @@
                     (if-not (empty? chans)
                       (let [[v ch] (alts!! (vec chans))]
                         (if v
-                          (send-to-fun executor ch v @fun-map-ref)))
+                          (send-to-fun executor ch v @fun-map-ref)
+                          (stop-listen ctx ch)))
                       (Thread/sleep 500)))
                   (catch InterruptedException e nil)
                   (catch Exception e (error e e))))))
-    {:executor executor :chans-ref chans-ref :fun-map-ref fun-map-ref}))
+   ctx))
 
