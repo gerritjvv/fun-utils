@@ -28,7 +28,8 @@
   {:pre [(fn? f) chans-ref fun-map-ref]}
   (dosync
     (alter fun-map-ref assoc ch f)
-    (alter chans-ref conj ch))
+    (alter chans-ref (fn [v]
+                       (vec (set (conj v ch))))))
   ch)
 
 (defn stop-listen
@@ -37,7 +38,8 @@
   {:pre [chans-ref fun-map-ref ch]}
   (dosync
     (alter fun-map-ref dissoc ch)
-    (alter chans-ref disj ch))
+    (alter chans-ref (fn [v]
+                       (-> v set (disj ch) vec))))
   ch)
 
 (defn close! [{:keys [^ExecutorService executor]} & {:keys [timeout-ms] :or {timeout-ms 2000}}]
@@ -47,7 +49,7 @@
 
 (defn shared-threads [threads]
   (let [executor (create-exec-service threads)
-        chans-ref (ref #{})
+        chans-ref (ref [])
         fun-map-ref (ref {})
         ctx  {:executor executor :chans-ref chans-ref :fun-map-ref fun-map-ref}]
     (submit executor
@@ -56,7 +58,7 @@
                 (try
                   (let [chans @chans-ref]
                     (if-not (empty? chans)
-                      (let [[v ch] (alts!! (vec chans))]
+                      (let [[v ch] (alts!! chans)]
                         (if v
                           (send-to-fun executor ch v @fun-map-ref)
                           (stop-listen ctx ch)))
