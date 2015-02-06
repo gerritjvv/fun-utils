@@ -1,5 +1,5 @@
 (ns fun-utils.threads
-  (:require [clojure.tools.logging :refer [error]]
+  (:require [clojure.tools.logging :refer [error info]]
             [clojure.core.async :refer [alts!!]])
   (:import (java.util.concurrent Executors ArrayBlockingQueue ThreadPoolExecutor ExecutorService ThreadPoolExecutor$CallerRunsPolicy TimeUnit)))
 
@@ -8,7 +8,7 @@
 ;; in a shared pool of threads.
 
 
-(defn- ^ExecutorService create-exec-service [threads]
+(defn ^ExecutorService create-exec-service [threads]
   (let [queue (ArrayBlockingQueue. (int 2))
         exec  (doto (ThreadPoolExecutor. 0 threads 60 TimeUnit/SECONDS queue)
                 (.setRejectedExecutionHandler  (ThreadPoolExecutor$CallerRunsPolicy.)))]
@@ -58,12 +58,14 @@
                 (try
                   (let [chans @chans-ref]
                     (if-not (empty? chans)
-                      (let [[v ch] (alts!! chans)]
-                        (if v
-                          (send-to-fun executor ch v @fun-map-ref)
-                          (stop-listen ctx ch)))
+                      (do
+                        (let [[v ch] (alts!! chans)]
+                          (if v
+                            (send-to-fun executor ch v @fun-map-ref)
+                            (stop-listen ctx ch))))
                       (Thread/sleep 500)))
                   (catch InterruptedException e nil)
-                  (catch Exception e (error e e))))))
+                  (catch Exception e (error e e))))
+              (info "<<<<<<<<<<<<<<<<<<<<< Exiting shared-threads loop >>>>>>>>>>>>>>>>>>>>>>")))
    ctx))
 
