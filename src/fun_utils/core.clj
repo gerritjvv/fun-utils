@@ -265,9 +265,8 @@
          (let [[v ch] (alts! (tuple ch-source t))
                b (if v (aconj! buff v) buff)]
            (if (and (not (= ch t)) (nil? v))
-             (do                                            ;on loop exit, if anything in the buffer send it
-               (if (> (asize b) 0)
-                 (>! ch-target (vec b))))
+             (if (> (asize b) 0)                            ;exit loop
+               (>! ch-target (vec b)))
              (let [[break? prev-2] (check-f prev-v b)
                    [b2 t2] (if (or (>= (asize b) buffer-count) (not v) break?)
                              (do

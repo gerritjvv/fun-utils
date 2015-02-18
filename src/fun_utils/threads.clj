@@ -1,7 +1,8 @@
 (ns fun-utils.threads
   (:require [clojure.tools.logging :refer [error info]]
             [clojure.core.async :refer [alts!!]])
-  (:import (java.util.concurrent Executors ArrayBlockingQueue ThreadPoolExecutor ExecutorService ThreadPoolExecutor$CallerRunsPolicy TimeUnit)))
+  (:import (java.util.concurrent Executors ArrayBlockingQueue ThreadPoolExecutor ExecutorService ThreadPoolExecutor$CallerRunsPolicy TimeUnit)
+           (java.util.concurrent.atomic AtomicBoolean)))
 
 
 ;; A package that allows listening on channels using real threads and only react on events
@@ -9,8 +10,8 @@
 
 
 (defn ^ExecutorService create-exec-service [threads]
-  (let [queue (ArrayBlockingQueue. (int 2))
-        exec  (doto (ThreadPoolExecutor. 0 threads 60 TimeUnit/SECONDS queue)
+  (let [queue (ArrayBlockingQueue. (int 10))
+        exec  (doto (ThreadPoolExecutor. 2 threads 10 TimeUnit/SECONDS queue)
                 (.setRejectedExecutionHandler  (ThreadPoolExecutor$CallerRunsPolicy.)))]
     exec))
 
@@ -18,7 +19,7 @@
   (.submit service r))
 
 (defn send-to-fun [service ch v fun-map]
-  (if-let [f (get fun-map ch)]
+  (when-let [f (get fun-map ch)]
     (submit service (fn []
                       (try
                         (f v)
@@ -48,10 +49,12 @@
     (.shutdownNow executor)))
 
 (defn shared-threads [threads]
-  (let [executor (create-exec-service threads)
+  {:pre [(> 0 threads)]}
+  (let [executor (create-exec-service (inc threads))
         chans-ref (ref [])
         fun-map-ref (ref {})
-        ctx  {:executor executor :chans-ref chans-ref :fun-map-ref fun-map-ref}]
+        ctx  {:executor executor :chans-ref chans-ref :fun-map-ref fun-map-ref}
+        stopped (AtomicBoolean. true)]
     (submit executor
             (fn []
               (while (not (.isInterrupted (Thread/currentThread)))
