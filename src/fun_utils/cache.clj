@@ -100,7 +100,7 @@
     (fn [k & args]
       (if-let [v (get c k)]
         v
-        (let [v (apply f k args)]
+        (when-let [v (apply f k args)]
           (assoc c k v)
           v)))))
 
