@@ -40,6 +40,21 @@ own ttl cache.
 (get cache 1)
 ;; [1 1]
 
+;;specialised memoize for single arity functions
+(def f (c/memoize-1 (fn [x] (Thread/sleep x) x)))
+(f 5000)
+;; 5000 after waiting for 5 seconds
+
+(f 5000)
+;; 5000 immediately
+
+(def f (c/memoize (fn [a v] (Thread/sleep v) v)))
+(f :a 5000)
+;; 5000 after waiting for 5 seconds
+
+(f :a 5000)
+;; 5000 immediately
+
 ```
 
 ## fixdelay and fixdelay-thread
