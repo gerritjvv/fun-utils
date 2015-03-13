@@ -24,22 +24,22 @@ own ttl cache.
 (require '[fun-utils.cache :as c])
 
 (def cache (c/create-cache))
-(assoc cache 1 :a)
-(get cache 1)
-;; :a
+(assoc cache :a 1)
+(get cache :a)
+;; 1
 
-(def cache-ttl (c/create-cache :expire-on-write 500))
-(get cache 1)
+(def cache-ttl (c/create-cache :expire-after-write 500))
+(get cache-ttl :a)
 ;; nil
-(assoc cache 1 :a)
-(get cache 1)
-;; :a
+(assoc cache-ttl :a 1)
+(get cache-ttl :a)
+;; 1
 (Thread/sleep 1000)
-(get cache 1)
+(get cache-ttl :a)
 ;; nil
 
 (def cache2 (c/create-loading-cache (fn [k] [k 1])))
-(get cache 1)
+(get cache2 1)
 ;; [1 1]
 
 ;;specialised memoize for single arity functions
