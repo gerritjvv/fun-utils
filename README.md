@@ -21,6 +21,8 @@ own ttl cache.
 
 ```clojure
 
+(require '[fun-utils.cache :as c])
+
 (def cache (c/create-cache))
 (assoc cache 1 :a)
 (get cache 1)
