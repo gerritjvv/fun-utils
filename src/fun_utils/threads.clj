@@ -49,7 +49,7 @@
     (.shutdownNow executor)))
 
 (defn shared-threads [threads]
-  {:pre [(> 0 threads)]}
+  {:pre [(> threads 0)]}
   (let [executor (create-exec-service (inc threads))
         chans-ref (ref [])
         fun-map-ref (ref {})

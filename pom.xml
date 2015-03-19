@@ -3,7 +3,7 @@
   <groupId>fun-utils</groupId>
   <artifactId>fun-utils</artifactId>
   <packaging>jar</packaging>
-  <version>0.5.4</version>
+  <version>0.5.5</version>
   <name>fun-utils</name>
   <description>Clojure utility functions that come up time and again while developing clojure software</description>
   <url>https://github.com/gerritjvv/fun-utils</url>
@@ -16,7 +16,7 @@
   <scm>
     <connection>scm:git:git://github.com/gerritjvv/fun-utils.git</connection>
     <developerConnection>scm:git:ssh://git@github.com/gerritjvv/fun-utils.git</developerConnection>
-    <tag>985c0887e65cb5d34c167f3207729ff3ab922542
+    <tag>41daebc508642741094510bd0500dcf967f8bf5c
 </tag>
     <url>https://github.com/gerritjvv/fun-utils</url>
   </scm>
