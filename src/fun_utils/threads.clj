@@ -11,7 +11,7 @@
 
 (defn ^ExecutorService create-exec-service [threads]
   (let [queue (ArrayBlockingQueue. (int 10))
-        exec  (doto (ThreadPoolExecutor. 2 threads 10 TimeUnit/SECONDS queue)
+        exec  (doto (ThreadPoolExecutor. 2 (if (< threads 2) 2 threads) 10 TimeUnit/SECONDS queue)
                 (.setRejectedExecutionHandler  (ThreadPoolExecutor$CallerRunsPolicy.)))]
     exec))
 
