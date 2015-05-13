@@ -38,6 +38,19 @@
       (assoc m k v))))
 
 
+(defn thread-seq2
+  "Same as thread-seq except that the closed-f is called once the channel is closed and the last item is processed"
+  ([f closed-f ch]
+   (thread
+     (try
+       (loop []
+         (if-let [v (<!! ch)]
+           (do
+             (f v)
+             (recur))))
+       (finally
+         (closed-f))))))
+
 (defn thread-seq
   "  This function is the same as go-seq with the exception that it runs in a thread.
      If you are running IO or blocking code its important to not use go blocks.
