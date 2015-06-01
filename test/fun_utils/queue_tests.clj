@@ -2,9 +2,6 @@
   (:require [fun-utils.queue :as queue])
   (:use midje.sweet))
 
-
-
-
 (fact "Test Different Queue implementations"
 
       (defn test-queue [t]
