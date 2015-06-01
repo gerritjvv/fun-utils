@@ -10,6 +10,38 @@ I've tried to test each utlity function in its own test file.
 
 [![Clojars Project](http://clojars.org/fun-utils/latest-version.svg)](http://clojars.org/fun-utils)
 
+## Queue
+
+The ```fun-utils.queue``` interface provides a basic protocol ```IQueue``` that encapsulates the offer, poll and size functions
+most commonly used with queues. It also provides an factory multi method to create different implementations.
+ 
+Wraps queues ArrayBlockingQueue from java.util.concurrent and SpmcArrayQueue, and MpmcArrayQueue from https://github.com/JCTools/JCTools
+
+```clojure
+(require '[fun-utils.queue :as queue] :reload-all)
+
+;;create a ArrayBlockingQueue
+(def q (queue/queue-factory :array-queue 10))
+(queue/offer! q 10)
+(queue/size q)
+;;1
+(queue/poll! q)
+;;10
+
+;;create a SpmcArrayQueue queue
+(def q (queue/queue-factory :spmc-array-queue 10))
+(queue/offer! q 11)
+(queue/poll! q)
+;;11
+
+;;create a MpmcArrayQueue queue
+(def q (queue/queue-factory :mpmc-array-queue 10))
+(queue/offer! q 12)
+(queue/poll! q)
+;; 12
+
+```
+
 ## cache
 
 The ```fun-utils.cache``` namespace provides a Clojure Map wrapper arround the Google's Guava Cache.
