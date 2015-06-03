@@ -273,18 +273,18 @@
   ([ch-source buffer-count timeout-ms buffer-or-n check-f]
 
    (let [ch-target (chan buffer-or-n)]
-     (go
+     (thread
        (loop [buff (ArrayList.) t (timeout timeout-ms) prev-v (check-f)]
-         (let [[v ch] (alts! (tuple ch-source t))
+         (let [[v ch] (alts!! (tuple ch-source t))
                b (if v (aconj! buff v) buff)]
            (if (and (not (= ch t)) (nil? v))
              (if (> (asize b) 0)                            ;exit loop
-               (>! ch-target (vec b)))
+               (>!! ch-target (vec b)))
              (let [[break? prev-2] (check-f prev-v b)
                    [b2 t2] (if (or (>= (asize b) buffer-count) (not v) break?)
                              (do
                                (if (> (asize b) 0)
-                                 (>! ch-target (vec b)))          ;send the buffer to the channel
+                                 (>!! ch-target (vec b)))          ;send the buffer to the channel
                                (tuple (aclear! b) (timeout timeout-ms)))
                              (tuple b t))]
                ;create a new buffer and new timeout

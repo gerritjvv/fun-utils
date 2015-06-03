@@ -21,6 +21,7 @@
     <orderEntry type="library" name="Leiningen: org.clojure/core.async:0.1.267.0-0d7780-alpha" level="project" />
     <orderEntry type="library" name="Leiningen: org.clojure/tools.logging:0.3.0" level="project" />
     <orderEntry type="library" name="Leiningen: org.clojure/tools.nrepl:0.2.6" level="project" />
+    <orderEntry type="library" name="Leiningen: org.jctools/jctools-core:1.0" level="project" />
     <orderEntry type="library" name="Leiningen: potemkin:0.3.11" level="project" />
     <orderEntry type="library" name="Leiningen: bultitude:0.1.7" level="project" />
     <orderEntry type="library" name="Leiningen: colorize:0.1.1" level="project" />
