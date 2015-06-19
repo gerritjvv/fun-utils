@@ -1,5 +1,5 @@
 (ns fun-utils.core
-  (:import (java.util.concurrent ExecutorService)
+  (:import (java.util.concurrent ExecutorService Executors)
            (clojure.lang IFn)
            (java.util ArrayList)
            (java.util.concurrent.atomic AtomicReference AtomicLong AtomicBoolean))
@@ -7,6 +7,7 @@
             [clojure.core.async :as async]
             [clojure.tools.logging :refer [info error]]
             [clj-tuple :refer [tuple]]))
+
 
 (defn chan-bridge
   "in a loop read from ch-source and write to ch-target
