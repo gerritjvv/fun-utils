@@ -1,5 +1,6 @@
 (ns fun-utils.cache
   (:import [com.google.common.cache CacheBuilder CacheLoader Cache LoadingCache]
+           [com.google.common.util.concurrent SettableFuture]
            [java.util.concurrent TimeUnit Callable])
   (:require [potemkin.collections :refer [def-map-type]])
   (:refer-clojure :exclude [memoize]))
@@ -8,7 +9,12 @@
 
 (defn ^CacheLoader cache-loader [f]
   (proxy [CacheLoader] []
-    (load [k] (f k))))
+    (load [k] (f k))
+    (reload [k oldvalue]
+            (let [fut (SettableFuture/create)]
+              (future (.set fut (f k)))
+              fut))))
+
 
 (def-map-type GuavaLoadingCacheMap [^LoadingCache cache mta]
               (get [_ k default-value]
