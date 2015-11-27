@@ -1,19 +1,29 @@
-(ns fun-utils.cache
+(ns
+  fun-utils.cache
   (:import [com.google.common.cache CacheBuilder CacheLoader Cache LoadingCache]
            [com.google.common.util.concurrent SettableFuture]
-           [java.util.concurrent TimeUnit Callable])
+           [java.util.concurrent TimeUnit Callable ExecutorService]
+           (clojure.lang Agent))
   (:require [potemkin.collections :refer [def-map-type]])
   (:refer-clojure :exclude [memoize]))
 
 ;; Uses guava cache
 
+
+(def ^:dynamic ^ExecutorService *executor* Agent/soloExecutor)
+
+(defmacro submit [ service & body]
+  `(let [f# (fn [] ~@body)]
+     (.submit ^ExecutorService ~service ^Callable f#)))
+
 (defn ^CacheLoader cache-loader [f]
-  (proxy [CacheLoader] []
-    (load [k] (f k))
-    (reload [k oldvalue]
-            (let [fut (SettableFuture/create)]
-              (future (.set fut (f k)))
-              fut))))
+  (let [^ExecutorService exec *executor*]
+    (proxy [CacheLoader] []
+      (load [k] (f k))
+      (reload [k oldvalue]
+        (let [fut (SettableFuture/create)]
+          (submit exec (.set fut (f k)))
+          fut)))))
 
 
 (def-map-type GuavaLoadingCacheMap [^LoadingCache cache mta]
@@ -83,7 +93,11 @@
 (defn -create-cache [& args]
   (.build ^CacheBuilder(apply -configure-cache args)))
 
-(defn create-loading-cache [loader-f & args]
+(defn create-loading-cache
+  "Background cache reloading is asynchronous and the loader-f function will be called
+   in a background thread, the default thread pool is Agent/soloExecutor, and can be set using
+   the dynamic variable *executor*"
+  [loader-f & args]
   (:pre [(fn? loader-f)])
   (GuavaLoadingCacheMap. (apply -create-loading-cache loader-f args) {}))
 
