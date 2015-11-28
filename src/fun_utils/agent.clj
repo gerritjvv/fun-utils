@@ -2,6 +2,7 @@
   ^{:doc "Improvements on clojure's agent(s) by allowing for blocking agents to avoid OOM when having slow processing functions"}
   fun-utils.agent
   (:require [fun-utils.threads :as threads]
+            [clojure.tools.logging :refer [error]]
             [fun-utils.core :as core]
 
             [clojure.core.async :as async])
@@ -19,11 +20,17 @@
 (defn closed? [^BlockingAgent agnt]
   (.get ^AtomicBoolean (.closed agnt)))
 
+(defn log-error
+  "Prints and error using clojure.tools.logging/error"
+  [e f]
+  (error (str "Error while running in agent f: " f " error " e) e))
+
 (defn agent
   "Create a blocking agent using async channels with length of mailbox-len default 10.
    This agent must be closed after usage using the close-agent function.
    The agent implements IDeref and can be read using @agent"
-  [state & {:keys [mailbox-len] :or {mailbox-len 10}}]
+  ^{:arg-lists '([mailbod-len number? error-handler (fn [error function-sent])])}
+  [state & {:keys [mailbox-len error-handler] :or {mailbox-len 10 error-handler log-error}}]
   (let [ch (async/chan mailbox-len)
         state-ref (AtomicReference. state)
         ^AtomicBoolean closed (AtomicBoolean. false)
@@ -33,7 +40,9 @@
     ; state = (f state)
     (core/thread-seq2
       (fn [f]
-        (.set state-ref (f (.get state-ref))))
+        (try
+          (.set state-ref (f (.get state-ref)))
+          (catch Exception e (error-handler e e))))
       (fn []
         (.countDown close-complete)) ch)
 

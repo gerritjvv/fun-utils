@@ -89,6 +89,32 @@ own ttl cache.
 (f :a 5000)
 ;; 5000 immediately
 
+;;;;;;;async background refresh of caches
+;;;;;;; when using :refresh-after-write the guava cache will reload values after N milliseconds
+;;;;;;; the load function is called using the default executor (same as for future Agent/soloExecutor)
+;;;;;;; a custom java.util.concurrent.ExecutorService can be set on cache creation by setting to 
+;;;;;;; *executor* dynamic var, this variable is captured on cache creation
+;;;;;;;see https://code.google.com/p/guava-libraries/wiki/CachesExplained#Refresh
+;;;;;;     https://github.com/gerritjvv/fun-utils/issues/1
+
+(import '[java.util.concurrent Executors])
+(def exec (Executors/newFixedThreadPool 10))
+
+(defn wait-and-print [[s ms]]
+   (println "starting " s " at " (java.util.Date.))
+   (Thread/sleep ms)
+   (println "finished " s " at " (java.util.Date.) " waited " ms "ms")
+   [s ms (java.util.Date.)])
+   
+(def cache3 (binding [c/*executor* exec] (c/create-loading-cache wait-and-print :refresh-after-write 500)))
+;; using the default executor
+;;(def cache3 (c/create-loading-cache wait-and-print :refresh-after-write 500))
+
+;;wait one second
+(get cache3 ["foo1" 1000])
+;;return without waiting
+(get cache3 ["foo1" 1000])
+
 ```
 
 ## fixdelay and fixdelay-thread
