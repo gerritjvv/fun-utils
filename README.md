@@ -8,6 +8,9 @@ Clojure utility functions that come up time and again while developing clojure s
 Best way to see how to use them is going through the unit tests.
 I've tried to test each utlity function in its own test file.
 
+[![Build Status](https://travis-ci.org/gerritjvv/fun-utils.svg)](https://travis-ci.org/gerritjvv/fun-utils)
+
+
 [![Clojars Project](http://clojars.org/fun-utils/latest-version.svg)](http://clojars.org/fun-utils)
 
 ## Queue
