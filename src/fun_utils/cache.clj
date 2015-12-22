@@ -25,7 +25,6 @@
           (submit exec (.set fut (f k)))
           fut)))))
 
-
 (def-map-type GuavaLoadingCacheMap [^LoadingCache cache mta]
               (get [_ k default-value]
                    (if-let [v (.get cache k)] v default-value))
