@@ -29,7 +29,7 @@
   "Create a blocking agent using async channels with length of mailbox-len default 10.
    This agent must be closed after usage using the close-agent function.
    The agent implements IDeref and can be read using @agent"
-  ^{:arg-lists '([mailbod-len number? error-handler (fn [error function-sent])])}
+  ^{:arg-lists '([mailbox-len number? error-handler (fn [error function-sent])])}
   [state & {:keys [mailbox-len error-handler] :or {mailbox-len 10 error-handler log-error}}]
   (let [ch (async/chan mailbox-len)
         state-ref (AtomicReference. state)
@@ -47,6 +47,17 @@
         (.countDown close-complete)) ch)
 
     (BlockingAgent. ch state-ref closed close-complete)))
+
+(defn excepton-if-timeout [val]
+  (when (= val :timeout)
+    (throw (RuntimeException. (str "Timeout while waiting to send to agent")))))
+
+(defn send-timeout [^BlockingAgent a f timeout & args]
+  (if (closed? a)
+    (throw (RuntimeException. "Cannot write to a closed agent"))
+    (excepton-if-timeout (async/alt!! (async/timeout timeout) :timeout
+                                      [[(.chan a) (fn [v] (apply f v args))]] :sent)))
+  a)
 
 (defn send
   "Send a function f to the agent to be executed asynchronously but in serial with other functions
