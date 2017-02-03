@@ -1,12 +1,14 @@
 (ns fun-utils.queue
   (:import
     [java.util.concurrent ArrayBlockingQueue TimeUnit]
-    [org.jctools.queues SpmcArrayQueue MpmcArrayQueue]))
+    [org.jctools.queues SpmcArrayQueue MpmcArrayQueue]
+    (java.util ArrayList List)))
 
 
 (defprotocol IQueue
   (-offer! [this data] [this data timeout-ms])
   (-poll!  [this] [this timeout-ms])
+  (-drain! [this n])
   (-size   [this] "Size of the queue"))
 
 (defn- _take!
@@ -56,6 +58,9 @@
     (reify IQueue
       (-offer!   [_ data timeout-ms] (.offer queue data timeout-ms TimeUnit/MILLISECONDS))
       (-offer! [_ data] (.offer queue data))
+      (-drain! [_ n] (let [^List l (ArrayList. (int n))]
+                       (.drainTo queue l (int n))
+                       l))
       (-poll!  [_ timeout-ms] (.poll queue timeout-ms TimeUnit/MILLISECONDS))
       (-poll!  [_]      (.poll queue))
       (-size   [_]      (.size queue)))))
@@ -65,6 +70,9 @@
     (reify IQueue
       (-offer!   [this data timeout-ms] (_put! this data timeout-ms))
       (-offer! [_ data] (.offer queue data))
+      (-drain! [_ n] (if-let [o (.poll queue)]
+                       [o]
+                       []))
       (-poll!  [this timeout-ms] (_take! this timeout-ms))
       (-poll!  [_]      (.poll queue))
       (-size   [_]      (.size queue)))))
@@ -74,6 +82,9 @@
     (reify IQueue
       (-offer!   [this data timeout-ms] (_put! this data timeout-ms))
       (-offer! [_ data] (.offer queue data))
+      (-drain! [_ n] (if-let [o (.poll queue)]
+                       [o]
+                       []))
       (-poll!  [this timeout-ms] (_take! this timeout-ms))
       (-poll!  [_]      (.poll queue))
       (-size   [_]      (.size queue)))))
