@@ -1,8 +1,7 @@
 (ns
   ^{:doc "Improvements on clojure's agent(s) by allowing for blocking agents to avoid OOM when having slow processing functions"}
   fun-utils.agent
-  (:require [fun-utils.threads :as threads]
-            [clojure.tools.logging :refer [error]]
+  (:require [clojure.tools.logging :refer [error]]
             [fun-utils.core :as core]
 
             [clojure.core.async :as async])

@@ -1,5 +1,5 @@
 (ns fun-utils.core
-  (:import (java.util.concurrent ExecutorService Executors)
+  (:import (java.util.concurrent ExecutorService)
            (clojure.lang IFn)
            (java.util ArrayList)
            (java.util.concurrent.atomic AtomicReference AtomicLong AtomicBoolean))
